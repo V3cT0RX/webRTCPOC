@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import PopUp from "./PopUp";
+// import PopUp from "./PopUp";
 const constraints = window.constraints = {
     audio: false,
     video: true
