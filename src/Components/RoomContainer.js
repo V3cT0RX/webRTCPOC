@@ -59,32 +59,30 @@ export default class RoomContainer extends Component {
                     console.log(message);
                     let myModal = new Modal(document.getElementById('exampleModal'));
                     myModal.show();
-                    this.setState({
-                        callerId: message.userId
-                    })
                     break;
                 case '_CALL_RESPONSE':
                     console.log('_call_response on', message);
                     if (message.callStatus == 1) {
                         this.initWebRTC(true);
-                        this.showSelfStream()
-                            .then(stream => {
-                                this.attachSelfStreamToPC(stream);
-                            });
+                        this.attachSelfStreamToPC();
+                        // this.showSelfStream()
+                        //     .then(stream => {
+                        //         this.attachSelfStreamToPC(stream);
+                        //     });
                     }
                     break;
                 case '_SDP_OFFER':
                     console.log('sdp offer on', message);
                     this.pc.setRemoteDescription(message.sdpOffer);
-                    this.showSelfStream().then(stream => {
-                        // this.attachSelfStreamToPC(stream);
-                        this.pc.createAnswer().then(sdpAnswer => {
-                            console.log("SDP answer created");
-                            this.pc.setLocalDescription(sdpAnswer).then(() => {
-                                this.sendSDPAnswer(sdpAnswer);
-                            });
+                    // this.showSelfStream().then(stream => {
+                    this.attachSelfStreamToPC();
+                    this.pc.createAnswer().then(sdpAnswer => {
+                        console.log("SDP answer created");
+                        this.pc.setLocalDescription(sdpAnswer).then(() => {
+                            this.sendSDPAnswer(sdpAnswer);
                         });
                     });
+                    // });
                     break;
                 case '_SDP_ANSWER':
                     console.log('sdp answer on', message);
@@ -92,9 +90,9 @@ export default class RoomContainer extends Component {
                     break;
                 case '_ICE_CANDIDATE':
                     console.log('ice candidate on', message);
-                    this.pcs.map(pc => {
-                        pc.addIceCandidate(message.candidate);
-                    });
+                    // this.pcs.map(pc => {
+                    this.pc.addIceCandidate(message.iceCandidate);
+                    // });
                     break;
                 default:
                     console.log('Invalid type');
@@ -143,12 +141,13 @@ export default class RoomContainer extends Component {
         };
         console.log(message.data);
         this.socket.emit('message', message);
-        this.setState({
-            callerId: this.socket.id
-        })
     }
 
-    handleCallResponse = (userName, callStatus) => {
+    handleCallResponse = async (userName, callStatus) => {
+        if (callStatus == 1) {
+            await this.showSelfStream();
+            this.initWebRTC(false);
+        }
         let message = {
             type: 'CALL_RESPONSE',
             data: {
@@ -160,9 +159,6 @@ export default class RoomContainer extends Component {
         };
         console.log('call response emit', message.data);
         this.socket.emit('message', message);
-        if (callStatus == 1) {
-            this.initWebRTC(false);
-        }
     }
 
     sendSDPOffer = (sdpOffer, userName) => {
@@ -208,8 +204,7 @@ export default class RoomContainer extends Component {
     }
 
     initWebRTC = (addNegotiationListener) => {
-        this.pc = new RTCPeerConnection();
-        this.pcs.push(new RTCPeerConnection());
+        this.pc = new RTCPeerConnection({ iceServers: [{ "urls": "stun:stun.l.google.com:19302" }] });
 
         // listener for self iceCancidates
         this.pc.onicecandidate = ({ candidate }) => {
@@ -223,8 +218,9 @@ export default class RoomContainer extends Component {
             // if (this.remoteVideoRef.current.srcObject) return;
             // this.remoteVideoRef.current.srcObject = event.streams[0];
             if (this.remoteVideoRef.current.srcObject !== event.streams[0]) {
-                this.remoteVideoRef.current.srcObject = event.streams[0];
-                this.attachSelfStreamToPC(event.streams[0]);
+                //this.remoteVideoRef.current.srcObject = event.streams[0];
+                document.getElementById("remoteVideo").srcObject = event.streams[0];
+                //this.attachSelfStreamToPC(event.streams[0]);
                 console.log('pc2 received remote stream', event.streams);
             }
         };
@@ -243,20 +239,39 @@ export default class RoomContainer extends Component {
         }
     }
 
-    attachSelfStreamToPC(stream) {
+    attachSelfStreamToPC() {
+        let stream = null;
+        let selfVideo = this.videoRef.current;
+        const fps = 0;
+        if (selfVideo.captureStream) {
+            stream = selfVideo.captureStream(fps);
+        } else if (selfVideo.mozCaptureStream) {
+            stream = selfVideo.mozCaptureStream(fps);
+        } else {
+            console.error('Stream capture is not supported');
+            stream = null;
+        }
+
         stream.getTracks().forEach(track => {
             console.log("added self track")
             this.pc.addTrack(track, stream);
         });
-        console.log("added self stream to PC", stream.getTracks(), stream)
-    };
+        console.log("added self stream to PC", stream.getTracks(), stream);
 
-    showSelfStream = () => {
-        return navigator.mediaDevices.getUserMedia(constraints).then(stream => {
-            console.log('Got stream with constraints:', constraints);
-            this.videoRef.current.srcObject = stream;
-            return stream;
-        });
+    }
+
+    // showSelfStream = () => {
+    //     return navigator.mediaDevices.getUserMedia(constraints).then(stream => {
+    //         console.log('Got stream with constraints:', constraints);
+    //         this.videoRef.current.srcObject = stream;
+    //         return stream;
+    //     });
+    // }
+
+    showSelfStream = async () => {
+        let stream = await navigator.mediaDevices.getUserMedia(constraints)
+        console.log('Got stream with constraints:', constraints);
+        this.videoRef.current.srcObject = stream;
     }
 
     render() {

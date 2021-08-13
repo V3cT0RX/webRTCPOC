@@ -11,7 +11,7 @@ export default class Video extends Component {
 
     handleCallClick = (event) => {
         event.preventDefault();
-        //this.props.showSelfStream();
+        this.props.showSelfStream();
         this.props.handleCallRequest(this.props.userName);
     }
 
@@ -25,8 +25,11 @@ export default class Video extends Component {
                         autoPlay
                         playsInline
                     />
+                </div>
+                <div>
                     <video
                         ref={this.props.remoteVideoRef}
+                        id="remoteVideo"
                         autoPlay
                         playsInline
                     />
