@@ -23,14 +23,16 @@ export default class RoomContainer extends Component {
         this.state = {
             userName: '',
             isJoin: false,
-            chat: []
+            chat: [],
+            userId: null,
+            callerId: null
         }
     }
 
     pcs = [];
     pc;
 
-    handleSocketMessages = () => {
+    handleSocketMessages = async () => {
         this.socket.on("message", msg => {
             console.log('received socket message:', msg);
             let message = msg.data;
@@ -39,7 +41,13 @@ export default class RoomContainer extends Component {
                     if (message.isRoomFull) {
                         this.socket.disconnect();
                     } else {
-                        this.setState({ isJoin: true });
+                        this.setState({
+                            isJoin: true,
+                            userId: this.socket.id
+                        }, () => {
+
+                            console.log("Room Joined:", this.socket.id, this.state);
+                        });
                     }
                     break;
                 case '_CHAT':
@@ -51,38 +59,32 @@ export default class RoomContainer extends Component {
                     console.log(message);
                     let myModal = new Modal(document.getElementById('exampleModal'));
                     myModal.show();
+                    this.setState({
+                        callerId: message.userId
+                    })
                     break;
                 case '_CALL_RESPONSE':
                     console.log('_call_response on', message);
                     if (message.callStatus == 1) {
-                        this.call();
-                        window.stream.getTracks().forEach(track => this.pc.addTrack(track, window.stream));
-                        this.pc.createOffer(offerOptions)
-                            .then(sdpOffer => {
-                                this.pc.setLocalDescription(sdpOffer)
-                                    .then(() => {
-                                        this.sendSDPOffer(sdpOffer);
-                                    })
+                        this.initWebRTC(true);
+                        this.showSelfStream()
+                            .then(stream => {
+                                this.attachSelfStreamToPC(stream);
                             });
                     }
                     break;
                 case '_SDP_OFFER':
                     console.log('sdp offer on', message);
-                    this.pc.setRemoteDescription(message.sdpOffer)
-                        .then(() => {
-                            // this.getVideoStream()
-                            this.videoRef.current.handleSuccess()
-                                .then((stream) => {
-                                    stream.getTracks().forEach(track => this.pc.addTrack(track, stream));
-                                    this.pc.createAnswer()
-                                        .then(sdpAnswer => {
-                                            this.pc.setLocalDescription(sdpAnswer)
-                                                .then(() => {
-                                                    this.sendSDPAnswer(sdpAnswer);
-                                                })
-                                        });
-                                })
-                        })
+                    this.pc.setRemoteDescription(message.sdpOffer);
+                    this.showSelfStream().then(stream => {
+                        // this.attachSelfStreamToPC(stream);
+                        this.pc.createAnswer().then(sdpAnswer => {
+                            console.log("SDP answer created");
+                            this.pc.setLocalDescription(sdpAnswer).then(() => {
+                                this.sendSDPAnswer(sdpAnswer);
+                            });
+                        });
+                    });
                     break;
                 case '_SDP_ANSWER':
                     console.log('sdp answer on', message);
@@ -111,7 +113,9 @@ export default class RoomContainer extends Component {
             },
         };
         this.socket.emit('message', message);
-        this.setState({ userName });
+        this.setState({
+            userName,
+        });
         this.handleSocketMessages();
     };
 
@@ -139,6 +143,9 @@ export default class RoomContainer extends Component {
         };
         console.log(message.data);
         this.socket.emit('message', message);
+        this.setState({
+            callerId: this.socket.id
+        })
     }
 
     handleCallResponse = (userName, callStatus) => {
@@ -154,7 +161,7 @@ export default class RoomContainer extends Component {
         console.log('call response emit', message.data);
         this.socket.emit('message', message);
         if (callStatus == 1) {
-            this.call();
+            this.initWebRTC(false);
         }
     }
 
@@ -200,22 +207,56 @@ export default class RoomContainer extends Component {
         this.socket.emit('message', message);
     }
 
-    call = () => {
+    initWebRTC = (addNegotiationListener) => {
         this.pc = new RTCPeerConnection();
         this.pcs.push(new RTCPeerConnection());
+
+        // listener for self iceCancidates
         this.pc.onicecandidate = ({ candidate }) => {
             console.log(candidate, 'candidate');
             this.sendICECandidate(candidate);
         };
+
+        // listener for remote stream
         this.pc.ontrack = (event) => {
-            console.log(event, 't set srcObject again if it is already set.');
-            if (this.remoteVideoRef.current.srcObject) return;
-            this.remoteVideoRef.current.srcObject = event.streams[0];
+            console.log(event, 'Hint In PC.onTrack', this.remoteVideoRef.current.srcObject, event.streams[0]);
+            // if (this.remoteVideoRef.current.srcObject) return;
+            // this.remoteVideoRef.current.srcObject = event.streams[0];
+            if (this.remoteVideoRef.current.srcObject !== event.streams[0]) {
+                this.remoteVideoRef.current.srcObject = event.streams[0];
+                this.attachSelfStreamToPC(event.streams[0]);
+                console.log('pc2 received remote stream', event.streams);
+            }
         };
+
+        if (addNegotiationListener) {
+            // listener for negotiation needed triggered after adding stream to pc
+            this.pc.onnegotiationneeded = async () => {
+                console.log("in onnegotiationneeded")
+                this.pc.createOffer().then(sdpOffer => {
+                    console.log("SDP offer created")
+                    this.pc.setLocalDescription(sdpOffer).then(() => {
+                        this.sendSDPOffer(sdpOffer);
+                    })
+                });
+            };
+        }
     }
 
-    getVideoStream = async () => {
-        return await navigator.mediaDevices.getUserMedia(constraints);
+    attachSelfStreamToPC(stream) {
+        stream.getTracks().forEach(track => {
+            console.log("added self track")
+            this.pc.addTrack(track, stream);
+        });
+        console.log("added self stream to PC", stream.getTracks(), stream)
+    };
+
+    showSelfStream = () => {
+        return navigator.mediaDevices.getUserMedia(constraints).then(stream => {
+            console.log('Got stream with constraints:', constraints);
+            this.videoRef.current.srcObject = stream;
+            return stream;
+        });
     }
 
     render() {
@@ -229,14 +270,11 @@ export default class RoomContainer extends Component {
                 // />
                 <>
                     <Video
-                        ref={this.videoRef}
+                        selfVideoRef={this.videoRef}
+                        remoteVideoRef={this.remoteVideoRef}
                         userName={this.state.userName}
                         handleCallRequest={this.handleCallRequest}
-                    />
-                    <video
-                        ref={this.remoteVideoRef}
-                        // autoPlay
-                        playsInline
+                        showSelfStream={this.showSelfStream}
                     />
                     <PopUp
                         userName={this.state.userName}
