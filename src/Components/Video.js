@@ -13,34 +13,32 @@ export default class Video extends Component {
     makeCallClick = (event) => {
         event.preventDefault();
         navigator.mediaDevices.getUserMedia(constraints).then(stream => {
-            this.handleSuccess(event);
-            this.props.handleCallRequest(this.props.userName);
+            this.handleSuccess(event)
+                .then(() => this.props.handleCallRequest(this.props.userName))
         })
     }
 
-    handleSuccess = (event) => {
-        navigator.mediaDevices.getUserMedia(constraints)
-            .then(stream => {
-                const video = this.videoRef.current;
-                const videoTracks = stream.getVideoTracks();
-                console.log('Got stream with constraints:', constraints);
-                console.log(`Using video device: ${videoTracks[0].label}`);
-                window.stream = stream; // make variable available to browser console
-                video.srcObject = stream;
-                event.target.disabled = true;
-            }
-            )
-            .catch(error => {
-                console.log(error);
-            })
+    handleSuccess = async (event) => {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints)
+        const video = this.videoRef.current;
+        const videoTracks = stream.getVideoTracks();
+        console.log('Got stream with constraints:', constraints);
+        console.log(`Using video device: ${videoTracks[0].label}`);
+        window.stream = stream; // make variable available to browser console
+        video.srcObject = stream;
+        if (event)
+            event.target.disabled = true;
+        return stream;
     }
+
+
     render() {
         return (
             <div className="d-flex  align-items-center flex-column w-100 ">
                 <div>
                     <video
                         ref={this.videoRef}
-                        // autoPlay 
+                        // autoPlay
                         playsInline
                     />
                 </div>
