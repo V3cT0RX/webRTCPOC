@@ -8,12 +8,11 @@ export default class PopUp extends React.Component {
     // }
     handleCallAccept = (callStatus) => {
         console.log(this.props.userName, callStatus);
-        this.props.handleCallResponse(this.props.userName, callStatus);
+        this.props.handleKmsCallResponse(this.props.userName, callStatus);
     }
     render() {
         return (
             <div>
-
                 <div className="modal fade" id="exampleModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                     <div className="modal-dialog">
                         <div className="modal-content">
