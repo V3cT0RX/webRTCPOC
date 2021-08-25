@@ -30,7 +30,6 @@ export default class RoomContainer extends Component {
         }
     }
     pc;
-
     handleSocketMessages = async () => {
         this.socket.on("message", msg => {
             console.log('received socket message:', msg);
@@ -44,7 +43,6 @@ export default class RoomContainer extends Component {
                             isJoin: true,
                             userId: this.socket.id
                         }, () => {
-
                             console.log("Room Joined:", this.socket.id, this.state);
                         });
                     }
@@ -146,7 +144,8 @@ export default class RoomContainer extends Component {
     }
     handleKmsCallRequest = (userName) => {
         //get media,stream,offer,iceCandidate
-        this.initWebRTC(true, isKmsCall = 'agent');
+        let isKmsCall = 'agent';
+        this.initWebRTC(true, isKmsCall);
         this.attachSelfStreamToPC();
     }
 
@@ -184,8 +183,9 @@ export default class RoomContainer extends Component {
 
     handleKmsCallResponse = async (userName, callStatus) => {
         if (callStatus == 1) {
+            let isKmsCall = 'user';
             await this.showSelfStream();
-            this.initWebRTC(true, isKmsCall = 'user');
+            this.initWebRTC(true, isKmsCall);
             this.attachSelfStreamToPC();
         }
         else {
@@ -288,10 +288,10 @@ export default class RoomContainer extends Component {
                     console.log("SDP offer created")
                     this.pc.setLocalDescription(sdpOffer).then(() => {
                         if (isKmsCall == 'agent') {
-                            this.sendKmsCallRequest(userName, sdpOffer);
+                            this.sendKmsCallRequest(this.userName, sdpOffer);
                         } else
                             if (isKmsCall == 'user') {
-                                this.sendKmsCallResponse(userName, callStatus, sdpOffer);
+                                this.sendKmsCallResponse(this.userName, this.callStatus, sdpOffer);
                             }
                         this.sendSDPOffer(sdpOffer);
 
