@@ -9,9 +9,9 @@ export default class KmsVideo extends Component {
         super(props);
     }
 
-    handleKmsCallClick = (event) => {
+    handleKmsCallClick = async (event) => {
         event.preventDefault();
-        this.props.showSelfStream();
+        await this.props.showSelfStream();
         this.props.handleKmsCallRequest(this.props.userName);
     }
 

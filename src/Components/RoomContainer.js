@@ -4,7 +4,7 @@ import { Modal } from "bootstrap";
 
 import Room from './Room';
 // import Chat from './Chat';
-// import Video from "./Video";
+import Video from "./Video";
 import KmsVideo from "./KMS_Video";
 import PopUp from "./PopUp";
 
@@ -58,7 +58,7 @@ export default class RoomContainer extends Component {
                     myModal.show();
                     break;
                 case '_KMS_CALL_REQUEST':
-                    console.log(message);
+                    console.log('kms call req', message);
                     let myKmsModal = new Modal(document.getElementById('exampleModal'));
                     myKmsModal.show();
                     break;
@@ -278,7 +278,6 @@ export default class RoomContainer extends Component {
                 console.log('pc2 received remote stream', event.streams);
             }
         };
-        console.log("INIT CALLs")
 
         if (addNegotiationListener) {
             // listener for negotiation needed triggered after adding stream to pc
@@ -289,12 +288,13 @@ export default class RoomContainer extends Component {
                     this.pc.setLocalDescription(sdpOffer).then(() => {
                         if (isKmsCall == 'agent') {
                             this.sendKmsCallRequest(this.userName, sdpOffer);
-                        } else
-                            if (isKmsCall == 'user') {
-                                this.sendKmsCallResponse(this.userName, this.callStatus, sdpOffer);
-                            }
-                        this.sendSDPOffer(sdpOffer);
-
+                        }
+                        else if (isKmsCall == 'user') {
+                            this.sendKmsCallResponse(this.userName, this.callStatus, sdpOffer);
+                        }
+                        else {
+                            this.sendSDPOffer(sdpOffer);
+                        }
                     })
                 });
             };
