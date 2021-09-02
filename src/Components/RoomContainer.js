@@ -144,8 +144,8 @@ export default class RoomContainer extends Component {
     }
     handleKmsCallRequest = (userName) => {
         //get media,stream,offer,iceCandidate
-        let isKmsCall = 'agent';
-        this.initWebRTC(true, isKmsCall);
+        let kmsUserRole = 'agent';
+        this.initWebRTC(true, kmsUserRole);
         this.attachSelfStreamToPC();
     }
 
@@ -183,9 +183,9 @@ export default class RoomContainer extends Component {
 
     handleKmsCallResponse = async (userName, callStatus) => {
         if (callStatus == 1) {
-            let isKmsCall = 'user';
+            let kmsUserRole = 'user';
             await this.showSelfStream();
-            this.initWebRTC(true, isKmsCall);
+            this.initWebRTC(true, kmsUserRole);
             this.attachSelfStreamToPC();
         }
         else {
@@ -262,7 +262,7 @@ export default class RoomContainer extends Component {
         this.socket.emit('message', message);
     }
 
-    initWebRTC = (addNegotiationListener, isKmsCall) => {
+    initWebRTC = (addNegotiationListener, kmsUserRole) => {
         this.pc = new RTCPeerConnection({ iceServers: [{ "urls": "stun:stun.l.google.com:19302" }] });
         // listener for self iceCancidates
         this.pc.onicecandidate = ({ candidate }) => {
@@ -286,10 +286,10 @@ export default class RoomContainer extends Component {
                 this.pc.createOffer().then(sdpOffer => {
                     console.log("SDP offer created")
                     this.pc.setLocalDescription(sdpOffer).then(() => {
-                        if (isKmsCall == 'agent') {
+                        if (kmsUserRole == 'agent') {
                             this.sendKmsCallRequest(this.userName, sdpOffer);
                         }
-                        else if (isKmsCall == 'user') {
+                        else if (kmsUserRole == 'user') {
                             this.sendKmsCallResponse(this.userName, this.callStatus, sdpOffer);
                         }
                         else {
