@@ -87,13 +87,16 @@ export default class RoomContainer extends Component {
                 case '_SDP_ANSWER':
                 case '_KMS_SDP_ANSWER':
                     console.log('sdp answer on', message);
-                    this.pc.setRemoteDescription(message.sdpAnswer);
+                    // console.log(message.userId, this.state.userId);
+                    if (message.userId == this.state.userId) {
+                        this.pc.setRemoteDescription(message.sdpAnswer);
+                    }
                     break;
-                case '_ICE_CANDIDATE':
-                case '_KMS_ICE_CANDIDATE':
-                    console.log('ice candidate on', message);
-                    this.pc.addIceCandidate(message.iceCandidate);
-                    break;
+                // case '_ICE_CANDIDATE':
+                // case '_KMS_ICE_CANDIDATE':
+                // console.log('ice candidate on', message);
+                // this.pc.addIceCandidate(message.iceCandidate);
+                // break;
                 default:
                     console.log('Invalid type');
                     break;
@@ -113,6 +116,7 @@ export default class RoomContainer extends Component {
         this.socket.emit('message', message);
         this.setState({
             userName,
+            // userId,
         });
         this.handleSocketMessages();
     };
@@ -182,10 +186,11 @@ export default class RoomContainer extends Component {
     }
 
     handleKmsCallResponse = async (userName, callStatus) => {
+        console.log(callStatus);
         if (callStatus == 1) {
             let kmsUserRole = 'user';
             await this.showSelfStream();
-            this.initWebRTC(true, kmsUserRole);
+            this.initWebRTC(true, kmsUserRole, callStatus);
             this.attachSelfStreamToPC();
         }
         else {
@@ -262,12 +267,17 @@ export default class RoomContainer extends Component {
         this.socket.emit('message', message);
     }
 
-    initWebRTC = (addNegotiationListener, kmsUserRole) => {
+    initWebRTC = (addNegotiationListener, kmsUserRole, callStatus) => {
         this.pc = new RTCPeerConnection({ iceServers: [{ "urls": "stun:stun.l.google.com:19302" }] });
         // listener for self iceCancidates
         this.pc.onicecandidate = ({ candidate }) => {
             console.log(candidate, 'candidate');
-            this.sendICECandidate(candidate);
+            if (kmsUserRole) {
+                this.sendKmsICECandidate(candidate);
+            }
+            else {
+                this.sendICECandidate(candidate);
+            }
         };
 
         // listener for remote stream
@@ -290,7 +300,8 @@ export default class RoomContainer extends Component {
                             this.sendKmsCallRequest(this.userName, sdpOffer);
                         }
                         else if (kmsUserRole == 'user') {
-                            this.sendKmsCallResponse(this.userName, this.callStatus, sdpOffer);
+                            console.log("this is kms call responce call", callStatus);
+                            this.sendKmsCallResponse(this.userName, callStatus, sdpOffer);
                         }
                         else {
                             this.sendSDPOffer(sdpOffer);
