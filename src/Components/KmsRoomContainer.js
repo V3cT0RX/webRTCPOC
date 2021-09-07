@@ -1,12 +1,11 @@
 import React, { Component } from "react";
 import { io } from "socket.io-client";
 import { Modal } from "bootstrap";
-
 import Room from './Room';
-// import Chat from './Chat';
-import Video from "./Video";
+import KmsVideo from "./KMS_Video";
 import PopUp from "./PopUp";
-
+// import Chat from './Chat';
+console.log(" STEP : ");
 const constraints = window.constraints = {
     audio: false,
     video: true
@@ -15,7 +14,7 @@ const offerOptions = {
     offerToReceiveAudio: 1,
     offerToReceiveVideo: 1
 };
-export default class RoomContainer extends Component {
+export default class KmsRoomContainer extends Component {
     constructor(props) {
         super(props);
         this.videoRef = React.createRef();
@@ -46,44 +45,37 @@ export default class RoomContainer extends Component {
                         });
                     }
                     break;
+
                 case '_CHAT':
                     let chat = [...this.state.chat];
                     chat.push({ by: message.userName, msg: message.msgData })
                     this.setState({ chat });
                     break;
-                case '_CALL_REQUEST':
-                    console.log(message);
-                    let myModal = new Modal(document.getElementById('exampleModal'));
-                    myModal.show();
+
+                case '_KMS_CALL_REQUEST':
+                    console.log(" STEP : 5");
+                    console.log('kms call req', message);
+                    let myKmsModal = new Modal(document.getElementById('exampleModal'));
+                    myKmsModal.show();
                     break;
 
-                case '_CALL_RESPONSE':
-                    console.log('_call_response on', message);
-                    if (message.callStatus == 1) {
-                        this.initWebRTC(true);
-                        this.attachSelfStreamToPC();
-                    }
+                case '_KMS_CALL_RESPONSE':
+                    console.log('_kms_call_response on', message);
+                    alert('User not accept the call');
                     break;
 
-                case '_SDP_OFFER':
-                    console.log('sdp offer on', message);
-                    this.pc.setRemoteDescription(message.sdpOffer);
-                    this.attachSelfStreamToPC();
-                    this.pc.createAnswer().then(sdpAnswer => {
-                        console.log("SDP answer created");
-                        this.pc.setLocalDescription(sdpAnswer).then(() => {
-                            this.sendSDPAnswer(sdpAnswer);
-                        });
-                    });
-                    break;
-                case '_SDP_ANSWER':
+                case '_KMS_SDP_ANSWER':
+                    console.log(" STEP : 11");
                     console.log('sdp answer on', message);
                     this.pc.setRemoteDescription(message.sdpAnswer);
                     break;
-                case '_ICE_CANDIDATE':
+
+                case '_KMS_ICE_CANDIDATE':
+                    console.log(" STEP : 18,19");
                     console.log('ice candidate on', message);
                     this.pc.addIceCandidate(message.iceCandidate);
                     break;
+
                 default:
                     console.log('Invalid type');
                     break;
@@ -121,68 +113,62 @@ export default class RoomContainer extends Component {
         this.setState({ chat });
     }
 
-    handleCallRequest = (userName) => {
-        let message = {
-            type: 'CALL_REQUEST',
-            data: {
-                meetingId: this.props.location.state.meetingId,
-                userName,
-                userId: this.socket.id,
-            }
-        };
-        console.log(message.data);
-        this.socket.emit('message', message);
+    handleKmsCallRequest = (userName) => {
+        //get media,stream,offer,iceCandidate
+        let kmsUserRole = 'agent';
+        this.initWebRTC(true, kmsUserRole);
+        this.attachSelfStreamToPC();
+        console.log(" STEP : 1 ");
     }
 
-    handleCallResponse = async (userName, callStatus) => {
-        if (callStatus == 1) {
-            await this.showSelfStream();
-            this.initWebRTC(false);
-        }
+    sendKmsCallRequest = (userName, sdpOffer) => {
         let message = {
-            type: 'CALL_RESPONSE',
+            type: 'KMS_CALL_REQUEST',
             data: {
                 meetingId: this.props.location.state.meetingId,
-                userId: this.socket.id,
                 userName,
-                callStatus
-            }
-        };
-        console.log('call response emit', message.data);
-        this.socket.emit('message', message);
-    }
-
-    sendSDPOffer = (sdpOffer, userName) => {
-        let message = {
-            type: 'SDP_OFFER',
-            data: {
-                meetingId: this.props.location.state.meetingId,
                 userId: this.socket.id,
-                userName,
                 sdpOffer,
             }
         };
-        console.log('sdp offer emit', message);
+        console.log(" STEP : 2");
+        console.log('kmscallReq', message.data);
         this.socket.emit('message', message);
     }
 
-    sendSDPAnswer = (sdpAnswer, userName) => {
+    handleKmsCallResponse = async (userName, callStatus) => {
+        console.log(" STEP : 6a");
+        console.log(callStatus);
+        if (callStatus == 1) {
+            let kmsUserRole = 'user';
+            await this.showSelfStream();
+            this.initWebRTC(true, kmsUserRole, callStatus);
+            this.attachSelfStreamToPC();
+        }
+        else {
+            this.sendKmsCallResponse = (userName, callStatus);
+        }
+    }
+
+    sendKmsCallResponse = (userName, callStatus, sdpOffer) => {
         let message = {
-            type: 'SDP_ANSWER',
+            type: 'KMS_CALL_RESPONSE',
             data: {
                 meetingId: this.props.location.state.meetingId,
                 userId: this.socket.id,
                 userName,
-                sdpAnswer
+                callStatus,
+                sdpOffer,
             }
         };
-        console.log('sdp answer emit', message);
+        console.log('call response emit', message.data);
+        console.log(" STEP : 6b");
         this.socket.emit('message', message);
     }
 
-    sendICECandidate = (iceCandidate, userName) => {
+    sendKmsICECandidate = (iceCandidate, userName) => {
         let message = {
-            type: 'ICE_CANDIDATE',
+            type: 'KMS_ICE_CANDIDATE',
             data: {
                 meetingId: this.props.location.state.meetingId,
                 userId: this.socket.id,
@@ -190,20 +176,23 @@ export default class RoomContainer extends Component {
                 iceCandidate
             }
         };
-        console.log('ice candidate emit', message);
-        this.socket.emit('message', message);
+        console.log('kms ice candidate emit', message);
+        if (iceCandidate != null)
+            this.socket.emit('message', message);
     }
 
     initWebRTC = (addNegotiationListener, kmsUserRole, callStatus) => {
         this.pc = new RTCPeerConnection({ iceServers: [{ "urls": "stun:stun.l.google.com:19302" }] });
         // listener for self iceCancidates
         this.pc.onicecandidate = ({ candidate }) => {
+            console.log(" STEP : 12/14");
             console.log(candidate, 'candidate');
-            this.sendICECandidate(candidate);
+            this.sendKmsICECandidate(candidate);
         };
 
         // listener for remote stream
         this.pc.ontrack = (event) => {
+            console.log(" STEP : 21/23");
             console.log(event, 'Hint In PC.onTrack', this.remoteVideoRef.current.srcObject, event.streams[0]);
             if (this.remoteVideoRef.current.srcObject !== event.streams[0]) {
                 document.getElementById("remoteVideo").srcObject = event.streams[0];
@@ -218,7 +207,13 @@ export default class RoomContainer extends Component {
                 this.pc.createOffer().then(sdpOffer => {
                     console.log("SDP offer created")
                     this.pc.setLocalDescription(sdpOffer).then(() => {
-                        this.sendSDPOffer(sdpOffer);
+                        if (kmsUserRole == 'agent') {
+                            this.sendKmsCallRequest(this.userName, sdpOffer);
+                        }
+                        else if (kmsUserRole == 'user') {
+                            console.log("this is kms call responce call", callStatus);
+                            this.sendKmsCallResponse(this.userName, callStatus, sdpOffer);
+                        }
                     })
                 });
             };
@@ -240,6 +235,7 @@ export default class RoomContainer extends Component {
 
         stream.getTracks().forEach(track => {
             console.log("added self track")
+            console.log(" STEP : 20/22");
             this.pc.addTrack(track, stream);
         });
         console.log("added self stream to PC", stream.getTracks(), stream);
@@ -255,23 +251,17 @@ export default class RoomContainer extends Component {
     render() {
         return (
             this.state.isJoin ?
-                // <Chat
-                //     userName={this.state.userName}
-                //     meetingId={this.props.location.state.meetingId}
-                //     chats={this.state.chat}
-                //     handleSendChat={this.handleSendChat}
-                // />
                 <>
-                    <Video
+                    <KmsVideo
                         selfVideoRef={this.videoRef}
                         remoteVideoRef={this.remoteVideoRef}
                         userName={this.state.userName}
-                        handleCallRequest={this.handleCallRequest}
+                        handleKmsCallRequest={this.handleKmsCallRequest}
                         showSelfStream={this.showSelfStream}
                     />
                     <PopUp
                         userName={this.state.userName}
-                        handleCallResponse={this.handleCallResponse}
+                        handleCallResponse={this.handleKmsCallResponse}
                     />
                 </>
                 :

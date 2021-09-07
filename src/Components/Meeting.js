@@ -6,24 +6,35 @@ class Meeting extends React.Component {
         super(props);
         this.state = {
             meetingName: '',
+            isKmsCall: false,
             // meetId: null,
         }
     }
     onCreateMeeting = async (event) => {
         event.preventDefault();
-        const meetingName = this.state.meetingName
+        const meetingName = this.state.meetingName;
+        const isKmsCall = this.state.isKmsCall;
+
         if (meetingName !== "") {
             try {
                 const response = await axios.post(`http://127.0.0.1:4001/createmeeting`, { meetingName })
                 const meetingId = response.data.meetingId; //take it from res.data
                 console.log(meetingId);
-                this.props.history.push({
-                    pathname: '/room',
-                    state: {
-                        meetingId,
-                        create: true,
-                    }
-                })
+                isKmsCall ?
+                    this.props.history.push({
+                        pathname: '/kmsroom',
+                        state: {
+                            meetingId,
+                            create: true,
+                        }
+                    })
+                    : this.props.history.push({
+                        pathname: '/room',
+                        state: {
+                            meetingId,
+                            create: true,
+                        }
+                    });
             } catch (err) {
                 console.log(err, 'got error');
             }
@@ -31,18 +42,28 @@ class Meeting extends React.Component {
     }
     onJoinMeeting = async (event) => {
         event.preventDefault();
-        const meetingId = this.state.meetingName
+        const meetingId = this.state.meetingName;
+        const isKmsCall = this.state.isKmsCall;
+
         if (meetingId !== "") {
             try {
                 console.log(meetingId);
                 const response = await axios.post(`http://127.0.0.1:4001/joinmeeting`, { meeting_id: meetingId })
-                this.props.history.push({
-                    pathname: '/room',
-                    state: {
-                        meetingId,
-                        create: false,
-                    }
-                })
+                isKmsCall ?
+                    this.props.history.push({
+                        pathname: '/kmsroom',
+                        state: {
+                            meetingId,
+                            create: false,
+                        }
+                    })
+                    : this.props.history.push({
+                        pathname: '/room',
+                        state: {
+                            meetingId,
+                            create: false,
+                        }
+                    })
             } catch (err) {
                 console.log(err, 'Unable to join meeting');
             }
@@ -51,12 +72,23 @@ class Meeting extends React.Component {
     handleChange = event => {
         this.setState({ [event.target.name]: event.target.value });
     }
-
+    handleCheck = () => {
+        this.setState({
+            isKmsCall: !this.state.isKmsCall
+        })
+    }
     render() {
         return (
             <div className="d-flex justify-content-center align-items-center h-100">
                 <form >
-                    <label className="form-label" htmlFor="meeting">Meeting</label>
+                    <label className="form-label" htmlFor="meeting">Meeting...
+                        <div>
+                            <input className="form-check-input" type="checkbox" value="true" id="flexCheckIndeterminate" onChange={this.handleCheck} />
+                            <label className="form-check-label" htmlFor="flexCheckIndeterminate">
+                                KMS Call
+                            </label>
+                        </div>
+                    </label>
                     <div className="mb-3">
                         <input
                             className="form-control "
@@ -64,6 +96,7 @@ class Meeting extends React.Component {
                             value={this.state.meetingName}
                             onChange={this.handleChange}
                         />
+
                     </div>
                     <div className="mb-3 ">
                         <button

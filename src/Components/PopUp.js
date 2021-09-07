@@ -9,7 +9,7 @@ export default class PopUp extends React.Component {
     handleCallAccept = (callStatus) => {
         console.log(this.props.userName, callStatus);
         // this.props.handleCallResponse(this.props.userName, callStatus);
-        this.props.handleKmsCallResponse(this.props.userName, callStatus);
+        this.props.handleCallResponse(this.props.userName, callStatus);
     }
     render() {
         return (

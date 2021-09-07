@@ -24,14 +24,16 @@ export default class Video extends Component {
                         id="selfVideo"
                         autoPlay
                         playsInline
+                        style={{ margin: 5 }}
                     />
-                </div>
-                <div>
+                    {/* </div>
+                <div> */}
                     <video
                         ref={this.props.remoteVideoRef}
                         id="remoteVideo"
                         autoPlay
                         playsInline
+                        style={{ margin: 5 }}
                     />
                 </div>
                 <div className="mb-3">
