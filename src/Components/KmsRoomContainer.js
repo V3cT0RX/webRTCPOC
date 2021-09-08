@@ -5,7 +5,6 @@ import Room from './Room';
 import KmsVideo from "./KMS_Video";
 import PopUp from "./PopUp";
 // import Chat from './Chat';
-console.log(" STEP : ");
 const constraints = window.constraints = {
     audio: false,
     video: true
@@ -101,7 +100,6 @@ export default class KmsRoomContainer extends Component {
     };
 
     handleSendChat = (data) => {
-        // console.log(this.socket);
         let message = {
             type: 'CHAT',
             data
@@ -187,7 +185,7 @@ export default class KmsRoomContainer extends Component {
         this.pc.onicecandidate = ({ candidate }) => {
             console.log(" STEP : 12/14");
             console.log(candidate, 'candidate');
-            this.sendKmsICECandidate(candidate);
+            this.sendKmsICECandidate(candidate, this.state.userName);
         };
 
         // listener for remote stream
@@ -208,11 +206,11 @@ export default class KmsRoomContainer extends Component {
                     console.log("SDP offer created")
                     this.pc.setLocalDescription(sdpOffer).then(() => {
                         if (kmsUserRole == 'agent') {
-                            this.sendKmsCallRequest(this.userName, sdpOffer);
+                            this.sendKmsCallRequest(this.state.userName, sdpOffer);
                         }
                         else if (kmsUserRole == 'user') {
                             console.log("this is kms call responce call", callStatus);
-                            this.sendKmsCallResponse(this.userName, callStatus, sdpOffer);
+                            this.sendKmsCallResponse(this.state.userName, callStatus, sdpOffer);
                         }
                     })
                 });

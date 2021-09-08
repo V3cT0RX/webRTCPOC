@@ -52,7 +52,7 @@ export default class RoomContainer extends Component {
                     this.setState({ chat });
                     break;
                 case '_CALL_REQUEST':
-                    console.log(message);
+                    console.log('on _call_request', message);
                     let myModal = new Modal(document.getElementById('exampleModal'));
                     myModal.show();
                     break;
@@ -72,7 +72,7 @@ export default class RoomContainer extends Component {
                     this.pc.createAnswer().then(sdpAnswer => {
                         console.log("SDP answer created");
                         this.pc.setLocalDescription(sdpAnswer).then(() => {
-                            this.sendSDPAnswer(sdpAnswer);
+                            this.sendSDPAnswer(sdpAnswer, this.state.userName);
                         });
                     });
                     break;
@@ -109,7 +109,6 @@ export default class RoomContainer extends Component {
     };
 
     handleSendChat = (data) => {
-        // console.log(this.socket);
         let message = {
             type: 'CHAT',
             data
@@ -191,20 +190,21 @@ export default class RoomContainer extends Component {
             }
         };
         console.log('ice candidate emit', message);
-        this.socket.emit('message', message);
+        if (iceCandidate != null)
+            this.socket.emit('message', message);
     }
 
-    initWebRTC = (addNegotiationListener, kmsUserRole, callStatus) => {
+    initWebRTC = (addNegotiationListener) => {
         this.pc = new RTCPeerConnection({ iceServers: [{ "urls": "stun:stun.l.google.com:19302" }] });
         // listener for self iceCancidates
         this.pc.onicecandidate = ({ candidate }) => {
             console.log(candidate, 'candidate');
-            this.sendICECandidate(candidate);
+            this.sendICECandidate(candidate, this.state.userName);
         };
 
         // listener for remote stream
         this.pc.ontrack = (event) => {
-            console.log(event, 'Hint In PC.onTrack', this.remoteVideoRef.current.srcObject, event.streams[0]);
+            console.log(event, 'Stream In PC.onTrack', this.remoteVideoRef.current.srcObject, event.streams[0]);
             if (this.remoteVideoRef.current.srcObject !== event.streams[0]) {
                 document.getElementById("remoteVideo").srcObject = event.streams[0];
                 console.log('pc2 received remote stream', event.streams);
@@ -218,7 +218,7 @@ export default class RoomContainer extends Component {
                 this.pc.createOffer().then(sdpOffer => {
                     console.log("SDP offer created")
                     this.pc.setLocalDescription(sdpOffer).then(() => {
-                        this.sendSDPOffer(sdpOffer);
+                        this.sendSDPOffer(sdpOffer, this.state.userName);
                     })
                 });
             };

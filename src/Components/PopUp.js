@@ -7,8 +7,6 @@ export default class PopUp extends React.Component {
     //     // this.videoRef = React.createRef();
     // }
     handleCallAccept = (callStatus) => {
-        console.log(this.props.userName, callStatus);
-        // this.props.handleCallResponse(this.props.userName, callStatus);
         this.props.handleCallResponse(this.props.userName, callStatus);
     }
     render() {
