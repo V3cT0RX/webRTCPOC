@@ -14,7 +14,10 @@ export default class KmsVideo extends Component {
         await this.props.showSelfStream();
         this.props.handleKmsCallRequest(this.props.userName);
     }
-
+    handleKmsEndCallClick = (event) => {
+        event.preventDefault();
+        this.props.handleKmsEndCall();
+    }
     render() {
         return (
             <div className="d-flex  align-items-center flex-column w-100 ">
@@ -40,6 +43,15 @@ export default class KmsVideo extends Component {
                         onClick={this.handleKmsCallClick}
                     >
                         Call
+                    </button>
+
+                </div>
+                <div className="mb-3">
+                    <button
+                        type="button"
+                        onClick={this.handleKmsEndCallClick}
+                    >
+                        End Call
                     </button>
 
                 </div>

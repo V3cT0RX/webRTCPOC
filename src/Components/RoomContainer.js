@@ -63,6 +63,10 @@ export default class RoomContainer extends Component {
                         this.initWebRTC(true);
                         this.attachSelfStreamToPC();
                     }
+                    else {
+                        alert('User not accept the call');
+                        this.stop();
+                    }
                     break;
 
                 case '_SDP_OFFER':
@@ -83,6 +87,9 @@ export default class RoomContainer extends Component {
                 case '_ICE_CANDIDATE':
                     console.log('ice candidate on', message);
                     this.pc.addIceCandidate(message.iceCandidate);
+                    break;
+                case '_CALL_ENDED':
+                    this.stop(true);
                     break;
                 default:
                     console.log('Invalid type');
@@ -193,7 +200,17 @@ export default class RoomContainer extends Component {
         if (iceCandidate != null)
             this.socket.emit('message', message);
     }
-
+    sendEndCallResponse = () => {
+        let message = {
+            type: 'CALL_ENDED',
+            data: {
+                meetingId: this.props.location.state.meetingId,
+                userId: this.socket.id,
+            }
+        };
+        console.log('call ended', message);
+        this.socket.emit('message', message);
+    }
     initWebRTC = (addNegotiationListener) => {
         this.pc = new RTCPeerConnection({ iceServers: [{ "urls": "stun:stun.l.google.com:19302" }] });
         // listener for self iceCancidates
@@ -247,11 +264,27 @@ export default class RoomContainer extends Component {
     }
 
     showSelfStream = async () => {
+        this.videoRef.current.style.display = "inline";
         let stream = await navigator.mediaDevices.getUserMedia(constraints)
-        console.log('Got stream with constraints:', constraints);
+        console.log('Got stream with constraints:', constraints, this.videoRef.current);
         this.videoRef.current.srcObject = stream;
     }
 
+    stop = (isPeer) => {
+        this.videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+        this.videoRef.current.style.display = "none";
+        if (this.pc) {
+            this.pc.close();
+            this.pc = null;
+            if (!isPeer)
+                this.sendEndCallResponse();
+            console.log("ON STOP");
+        }
+    }
+
+    handleEndCall = () => {
+        this.stop();
+    }
     render() {
         return (
             this.state.isJoin ?
@@ -268,6 +301,7 @@ export default class RoomContainer extends Component {
                         userName={this.state.userName}
                         handleCallRequest={this.handleCallRequest}
                         showSelfStream={this.showSelfStream}
+                        handleEndCall={this.handleEndCall}
                     />
                     <PopUp
                         userName={this.state.userName}

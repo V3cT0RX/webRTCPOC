@@ -15,6 +15,11 @@ export default class Video extends Component {
         this.props.handleCallRequest(this.props.userName);
     }
 
+    handleEndCallClick = (event) => {
+        event.preventDefault();
+        this.props.handleEndCall();
+    }
+
     render() {
         return (
             <div className="d-flex  align-items-center flex-column w-100 ">
@@ -42,6 +47,15 @@ export default class Video extends Component {
                         onClick={this.handleCallClick}
                     >
                         Call
+                    </button>
+
+                </div>
+                <div className="mb-3">
+                    <button
+                        type="button"
+                        onClick={this.handleEndCallClick}
+                    >
+                        End Call
                     </button>
 
                 </div>

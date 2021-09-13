@@ -61,6 +61,7 @@ export default class KmsRoomContainer extends Component {
                 case '_KMS_CALL_RESPONSE':
                     console.log('_kms_call_response on', message);
                     alert('User not accept the call');
+                    this.stop();
                     break;
 
                 case '_KMS_SDP_ANSWER':
@@ -73,6 +74,10 @@ export default class KmsRoomContainer extends Component {
                     console.log(" STEP : 18,19");
                     console.log('ice candidate on', message);
                     this.pc.addIceCandidate(message.iceCandidate);
+                    break;
+
+                case '_KMS_CALL_ENDED':
+                    this.stop(true);
                     break;
 
                 default:
@@ -179,6 +184,18 @@ export default class KmsRoomContainer extends Component {
             this.socket.emit('message', message);
     }
 
+    sendKmsEndCallResponse = () => {
+        let message = {
+            type: 'KMS_CALL_ENDED',
+            data: {
+                meetingId: this.props.location.state.meetingId,
+                userId: this.socket.id,
+            }
+        };
+        console.log('call ended', message);
+        this.socket.emit('message', message);
+    }
+
     initWebRTC = (addNegotiationListener, kmsUserRole, callStatus) => {
         this.pc = new RTCPeerConnection({ iceServers: [{ "urls": "stun:stun.l.google.com:19302" }] });
         // listener for self iceCancidates
@@ -246,6 +263,18 @@ export default class KmsRoomContainer extends Component {
         this.videoRef.current.srcObject = stream;
     }
 
+    stop = (isPeer) => {
+        this.videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+        this.videoRef.current.style.display = "none";
+        if (this.pc) {
+            this.pc.close();
+            this.pc = null;
+            if (!isPeer)
+                this.sendKmsEndCallResponse();
+            console.log("ON STOP");
+        }
+    }
+
     render() {
         return (
             this.state.isJoin ?
@@ -256,6 +285,7 @@ export default class KmsRoomContainer extends Component {
                         userName={this.state.userName}
                         handleKmsCallRequest={this.handleKmsCallRequest}
                         showSelfStream={this.showSelfStream}
+                        handleKmsEndCall={this.stop}
                     />
                     <PopUp
                         userName={this.state.userName}
