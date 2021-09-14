@@ -21,12 +21,15 @@ export default class RoomContainer extends Component {
         this.videoRef = React.createRef();
         this.remoteVideoRef = React.createRef();
         this.state = {
-            userName: '',
+            userName: this.props.location.state.userName,
             isJoin: false,
             chat: [],
             userId: null,
             callerId: null
         }
+    }
+    componentDidMount() {
+        this.handleJoin(this.state.userName);
     }
     pc;
     handleSocketMessages = async () => {
@@ -265,7 +268,7 @@ export default class RoomContainer extends Component {
 
     showSelfStream = async () => {
         this.videoRef.current.style.display = "inline";
-        let stream = await navigator.mediaDevices.getUserMedia(constraints)
+        let stream = await navigator.mediaDevices.getUserMedia(constraints) // Use getDisplayMedia for screenshare
         console.log('Got stream with constraints:', constraints, this.videoRef.current);
         this.videoRef.current.srcObject = stream;
     }
@@ -287,31 +290,31 @@ export default class RoomContainer extends Component {
     }
     render() {
         return (
-            this.state.isJoin ?
-                // <Chat
-                //     userName={this.state.userName}
-                //     meetingId={this.props.location.state.meetingId}
-                //     chats={this.state.chat}
-                //     handleSendChat={this.handleSendChat}
-                // />
-                <>
-                    <Video
-                        selfVideoRef={this.videoRef}
-                        remoteVideoRef={this.remoteVideoRef}
-                        userName={this.state.userName}
-                        handleCallRequest={this.handleCallRequest}
-                        showSelfStream={this.showSelfStream}
-                        handleEndCall={this.handleEndCall}
-                    />
-                    <PopUp
-                        userName={this.state.userName}
-                        handleCallResponse={this.handleCallResponse}
-                    />
-                </>
-                :
-                <Room
-                    handleJoin={this.handleJoin}
+            // this.state.isJoin ?
+            // <Chat
+            //     userName={this.state.userName}
+            //     meetingId={this.props.location.state.meetingId}
+            //     chats={this.state.chat}
+            //     handleSendChat={this.handleSendChat}
+            // />
+            <>
+                <Video
+                    selfVideoRef={this.videoRef}
+                    remoteVideoRef={this.remoteVideoRef}
+                    userName={this.state.userName}
+                    handleCallRequest={this.handleCallRequest}
+                    showSelfStream={this.showSelfStream}
+                    handleEndCall={this.handleEndCall}
                 />
+                <PopUp
+                    userName={this.state.userName}
+                    handleCallResponse={this.handleCallResponse}
+                />
+            </>
+            // :
+            // <Room
+            //     handleJoin={this.handleJoin}
+            // />
         );
 
     }

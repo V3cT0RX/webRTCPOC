@@ -19,12 +19,15 @@ export default class KmsRoomContainer extends Component {
         this.videoRef = React.createRef();
         this.remoteVideoRef = React.createRef();
         this.state = {
-            userName: '',
+            userName: this.props.location.state.userName,
             isJoin: false,
             chat: [],
             userId: null,
             callerId: null
         }
+    }
+    componentDidMount() {
+        this.handleJoin(this.state.userName);
     }
     pc;
     handleSocketMessages = async () => {
@@ -208,7 +211,7 @@ export default class KmsRoomContainer extends Component {
         // listener for remote stream
         this.pc.ontrack = (event) => {
             console.log(" STEP : 21/23");
-            console.log(event, 'Hint In PC.onTrack', this.remoteVideoRef.current.srcObject, event.streams[0]);
+            console.log(event, 'stream In PC.onTrack', this.remoteVideoRef.current.srcObject, event.streams[0]);
             if (this.remoteVideoRef.current.srcObject !== event.streams[0]) {
                 document.getElementById("remoteVideo").srcObject = event.streams[0];
                 console.log('pc2 received remote stream', event.streams);
@@ -258,6 +261,7 @@ export default class KmsRoomContainer extends Component {
     }
 
     showSelfStream = async () => {
+        this.videoRef.current.style.display = "inline";
         let stream = await navigator.mediaDevices.getUserMedia(constraints)
         console.log('Got stream with constraints:', constraints);
         this.videoRef.current.srcObject = stream;
@@ -277,25 +281,25 @@ export default class KmsRoomContainer extends Component {
 
     render() {
         return (
-            this.state.isJoin ?
-                <>
-                    <KmsVideo
-                        selfVideoRef={this.videoRef}
-                        remoteVideoRef={this.remoteVideoRef}
-                        userName={this.state.userName}
-                        handleKmsCallRequest={this.handleKmsCallRequest}
-                        showSelfStream={this.showSelfStream}
-                        handleKmsEndCall={this.stop}
-                    />
-                    <PopUp
-                        userName={this.state.userName}
-                        handleCallResponse={this.handleKmsCallResponse}
-                    />
-                </>
-                :
-                <Room
-                    handleJoin={this.handleJoin}
+            // this.state.isJoin ?
+            <>
+                <KmsVideo
+                    selfVideoRef={this.videoRef}
+                    remoteVideoRef={this.remoteVideoRef}
+                    userName={this.state.userName}
+                    handleKmsCallRequest={this.handleKmsCallRequest}
+                    showSelfStream={this.showSelfStream}
+                    handleKmsEndCall={this.stop}
                 />
+                <PopUp
+                    userName={this.state.userName}
+                    handleCallResponse={this.handleKmsCallResponse}
+                />
+            </>
+            // :
+            // <Room
+            //     handleJoin={this.handleJoin}
+            // />
         );
 
     }
