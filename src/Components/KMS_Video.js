@@ -20,8 +20,27 @@ export default class KmsVideo extends Component {
     }
     render() {
         return (
-            <div className="d-flex  align-items-center flex-column w-100 ">
-                <div>
+            <div className="d-flex  align-items-center flex-column w-100 mb-5">
+                <div
+                    className="mt-5"
+                    style={{ border: "1px solid grey", borderRadius: "15px", padding: "1rem", boxShadow: "1px 1px 5px grey" }}
+                >
+                    <button
+                        type="button"
+                        className="btn btn-success mx-5"
+                        onClick={this.handleKmsCallClick}
+                    >
+                        Call
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-danger mx-5"
+                        onClick={this.handleKmsEndCallClick}
+                    >
+                        End
+                    </button>
+                </div>
+                <div className="mt-5" style={{ border: "1px solid grey", borderRadius: "15px", padding: "1rem", boxShadow: "1px 1px 5px grey" }}>
                     <video
                         ref={this.props.selfVideoRef}
                         id="selfVideo"
@@ -36,24 +55,6 @@ export default class KmsVideo extends Component {
                         playsInline
                         style={{ margin: 5 }}
                     />
-                </div>
-                <div className="mb-3">
-                    <button
-                        type="button"
-                        onClick={this.handleKmsCallClick}
-                    >
-                        Call
-                    </button>
-
-                </div>
-                <div className="mb-3">
-                    <button
-                        type="button"
-                        onClick={this.handleKmsEndCallClick}
-                    >
-                        End Call
-                    </button>
-
                 </div>
             </div>
         );

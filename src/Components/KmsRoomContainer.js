@@ -80,6 +80,8 @@ export default class KmsRoomContainer extends Component {
                     break;
 
                 case '_KMS_CALL_ENDED':
+                    this.videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+                    this.videoRef.current.style.display = "none";
                     this.stop(true);
                     break;
 
@@ -104,6 +106,7 @@ export default class KmsRoomContainer extends Component {
             userName,
             // userId,
         });
+        alert(`Meeting ID: ${this.props.location.state.meetingId}`);
         this.handleSocketMessages();
     };
 
@@ -152,7 +155,7 @@ export default class KmsRoomContainer extends Component {
             this.attachSelfStreamToPC();
         }
         else {
-            this.sendKmsCallResponse = (userName, callStatus);
+            this.sendKmsCallResponse(this.state.userName, callStatus);
         }
     }
 
@@ -268,20 +271,20 @@ export default class KmsRoomContainer extends Component {
     }
 
     stop = (isPeer) => {
-        this.videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-        this.videoRef.current.style.display = "none";
         if (this.pc) {
             this.pc.close();
             this.pc = null;
-            if (!isPeer)
+            if (!isPeer) {
+                this.videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+                this.videoRef.current.style.display = "none";
                 this.sendKmsEndCallResponse();
+            }
             console.log("ON STOP");
         }
     }
 
     render() {
         return (
-            // this.state.isJoin ?
             <>
                 <KmsVideo
                     selfVideoRef={this.videoRef}
@@ -296,10 +299,6 @@ export default class KmsRoomContainer extends Component {
                     handleCallResponse={this.handleKmsCallResponse}
                 />
             </>
-            // :
-            // <Room
-            //     handleJoin={this.handleJoin}
-            // />
         );
 
     }

@@ -115,6 +115,7 @@ export default class RoomContainer extends Component {
             userName,
             // userId,
         });
+        alert(`Meeting ID: ${this.props.location.state.meetingId}`);
         this.handleSocketMessages();
     };
 

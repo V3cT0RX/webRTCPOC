@@ -1,5 +1,6 @@
 import React from "react";
 import axios from 'axios';
+import Logo from '../Assets/SCTLogo.jpg';
 import KmsRoomContainer from "./KmsRoomContainer";
 import RoomContainer from "./RoomContainer";
 class Meeting extends React.Component {
@@ -89,7 +90,9 @@ class Meeting extends React.Component {
         return (
             <div className="d-flex justify-content-center align-items-center h-100">
                 <form >
-                    <div className="form-label mb-5" htmlFor="meeting"><h3> WEBRTC SAMPLE APP</h3>
+                    <div className="form-label mb-5" htmlFor="meeting">
+                        <img src={Logo} alt="" />
+                        <h3> WEBRTC SAMPLE APP</h3>
                     </div>
                     <div style={{ border: "1px solid grey", borderRadius: "15px", padding: "2rem", boxShadow: "1px 1px 5px grey" }}>
                         <div className="mb-3">
@@ -115,7 +118,7 @@ class Meeting extends React.Component {
                                 Check if you want to make KMS call
                             </label>
                         </div>
-                        <div className="">
+                        <div>
                             <button
                                 className="btn btn-primary mx-5"
                                 type="submit"
