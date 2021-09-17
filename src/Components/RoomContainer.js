@@ -1,9 +1,6 @@
 import React, { Component } from "react";
 import { io } from "socket.io-client";
 import { Modal } from "bootstrap";
-
-import Room from './Room';
-// import Chat from './Chat';
 import Video from "./Video";
 import PopUp from "./PopUp";
 
@@ -115,7 +112,10 @@ export default class RoomContainer extends Component {
             userName,
             // userId,
         });
-        alert(`Meeting ID: ${this.props.location.state.meetingId}`);
+        if (this.props.location.state.create) {
+            navigator.clipboard.writeText(this.props.location.state.meetingId);
+            alert(`Meeting ID: ${this.props.location.state.meetingId}` + `\n` + `ID copied to clipboard, share with friend.`);
+        }
         this.handleSocketMessages();
     };
 
@@ -227,6 +227,7 @@ export default class RoomContainer extends Component {
         this.pc.ontrack = (event) => {
             console.log(event, 'Stream In PC.onTrack', this.remoteVideoRef.current.srcObject, event.streams[0]);
             if (this.remoteVideoRef.current.srcObject !== event.streams[0]) {
+                this.remoteVideoRef.current.style.display = "inline";
                 document.getElementById("remoteVideo").srcObject = event.streams[0];
                 console.log('pc2 received remote stream', event.streams);
             }
@@ -258,7 +259,6 @@ export default class RoomContainer extends Component {
             console.error('Stream capture is not supported');
             stream = null;
         }
-
         stream.getTracks().forEach(track => {
             console.log("added self track")
             this.pc.addTrack(track, stream);
@@ -277,6 +277,7 @@ export default class RoomContainer extends Component {
     stop = (isPeer) => {
         this.videoRef.current.srcObject.getTracks().forEach(track => track.stop());
         this.videoRef.current.style.display = "none";
+        this.remoteVideoRef.current.style.display = "none";
         if (this.pc) {
             this.pc.close();
             this.pc = null;

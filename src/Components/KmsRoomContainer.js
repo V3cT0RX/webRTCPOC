@@ -1,10 +1,10 @@
 import React, { Component } from "react";
 import { io } from "socket.io-client";
 import { Modal } from "bootstrap";
-import Room from './Room';
 import KmsVideo from "./KMS_Video";
 import PopUp from "./PopUp";
 // import Chat from './Chat';
+
 const constraints = window.constraints = {
     audio: false,
     video: true
@@ -80,8 +80,11 @@ export default class KmsRoomContainer extends Component {
                     break;
 
                 case '_KMS_CALL_ENDED':
-                    this.videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-                    this.videoRef.current.style.display = "none";
+                    if (this.videoRef.current.srcObject != null) {
+                        this.videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+                        this.videoRef.current.style.display = "none";
+                        this.remoteVideoRef.current.style.display = "none";
+                    }
                     this.stop(true);
                     break;
 
@@ -106,7 +109,8 @@ export default class KmsRoomContainer extends Component {
             userName,
             // userId,
         });
-        alert(`Meeting ID: ${this.props.location.state.meetingId}`);
+        if (this.props.location.state.create)
+            alert(`Meeting ID: ${this.props.location.state.meetingId}`);
         this.handleSocketMessages();
     };
 
@@ -216,6 +220,7 @@ export default class KmsRoomContainer extends Component {
             console.log(" STEP : 21/23");
             console.log(event, 'stream In PC.onTrack', this.remoteVideoRef.current.srcObject, event.streams[0]);
             if (this.remoteVideoRef.current.srcObject !== event.streams[0]) {
+                this.remoteVideoRef.current.style.display = "inline";
                 document.getElementById("remoteVideo").srcObject = event.streams[0];
                 console.log('pc2 received remote stream', event.streams);
             }
@@ -277,6 +282,7 @@ export default class KmsRoomContainer extends Component {
             if (!isPeer) {
                 this.videoRef.current.srcObject.getTracks().forEach(track => track.stop());
                 this.videoRef.current.style.display = "none";
+                this.remoteVideoRef.current.style.display = "none";
                 this.sendKmsEndCallResponse();
             }
             console.log("ON STOP");

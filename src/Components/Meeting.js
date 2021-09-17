@@ -1,8 +1,7 @@
 import React from "react";
 import axios from 'axios';
 import Logo from '../Assets/SCTLogo.jpg';
-import KmsRoomContainer from "./KmsRoomContainer";
-import RoomContainer from "./RoomContainer";
+
 class Meeting extends React.Component {
     constructor(props) {
         super(props);
@@ -10,7 +9,6 @@ class Meeting extends React.Component {
             meetingName: '',
             userName: '',
             isKmsCall: false,
-            // meetId: null,
         }
     }
     onCreateMeeting = async (event) => {
@@ -136,7 +134,6 @@ class Meeting extends React.Component {
                         </div>
                     </div>
                 </form>
-                {/* {this.state.isKmsCall ? <KmsRoomContainer /> : <RoomContainer />} */}
             </div >
         );
     }

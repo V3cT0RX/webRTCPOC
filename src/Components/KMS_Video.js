@@ -40,20 +40,21 @@ export default class KmsVideo extends Component {
                         End
                     </button>
                 </div>
-                <div className="mt-5" style={{ border: "1px solid grey", borderRadius: "15px", padding: "1rem", boxShadow: "1px 1px 5px grey" }}>
+                <div className="mt-5" >
+                    {/* style={{ border: "1px solid grey", borderRadius: "15px", padding: "1rem", boxShadow: "1px 1px 5px grey" }}> */}
                     <video
                         ref={this.props.selfVideoRef}
                         id="selfVideo"
                         autoPlay
                         playsInline
-                        style={{ margin: 5 }}
+                        style={{ margin: 5, width: "550px" }}
                     />
                     <video
                         ref={this.props.remoteVideoRef}
                         id="remoteVideo"
                         autoPlay
                         playsInline
-                        style={{ margin: 5 }}
+                        style={{ margin: 5, width: "550px" }}
                     />
                 </div>
             </div>
