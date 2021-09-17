@@ -45,7 +45,7 @@ export default class Video extends Component {
                 {/* <div  className="mt-5" style={{ border: "1px solid grey", borderRadius: "15px", padding: "1rem", boxShadow: "1px 1px 5px grey" }}> */}
                 <div style={{ position: "relative" }}>
                     <video
-                        style={{ margin: 5, position: "absolute", top: "10px", left: "10px", border: "2px solid white", width: "30%", height: "30%", zIndex: "1" }}
+                        style={{ position: "absolute", top: "10px", left: "10px", border: "2px solid white", width: "30%", height: "30%", zIndex: "1" }}
                         ref={this.props.selfVideoRef}
                         id="selfVideo"
                         autoPlay

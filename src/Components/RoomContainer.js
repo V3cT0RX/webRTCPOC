@@ -228,6 +228,11 @@ export default class RoomContainer extends Component {
             console.log(event, 'Stream In PC.onTrack', this.remoteVideoRef.current.srcObject, event.streams[0]);
             if (this.remoteVideoRef.current.srcObject !== event.streams[0]) {
                 this.remoteVideoRef.current.style.display = "inline";
+                this.videoRef.current.style.height = "30%";
+                this.videoRef.current.style.width = "30%";
+                this.videoRef.current.style.inset = "unset";
+                this.videoRef.current.style.top = "10px";
+                this.videoRef.current.style.left = "10px";
                 document.getElementById("remoteVideo").srcObject = event.streams[0];
                 console.log('pc2 received remote stream', event.streams);
             }
@@ -268,7 +273,9 @@ export default class RoomContainer extends Component {
     }
 
     showSelfStream = async () => {
-        this.videoRef.current.style.display = "inline";
+        // this.videoRef.current.style.display = "inline";
+        // this.videoRef.current.style.width = "100";
+        this.showSelfVideoElement();
         let stream = await navigator.mediaDevices.getUserMedia(constraints) // Use getDisplayMedia for screenshare
         console.log('Got stream with constraints:', constraints, this.videoRef.current);
         this.videoRef.current.srcObject = stream;
@@ -286,7 +293,16 @@ export default class RoomContainer extends Component {
             console.log("ON STOP");
         }
     }
+    showSelfVideoElement = () => {
+        this.remoteVideoRef.current.style.display = "block";
+        this.videoRef.current.style.display = "block";
+        // this.videoRef.current.style.top = "10px";
+        // this.videoRef.current.style.left = "10px";
+        this.videoRef.current.style.inset = "0";
+        this.videoRef.current.style.height = "unset";
+        this.videoRef.current.style.width = "unset";
 
+    }
     handleEndCall = () => {
         this.stop();
     }

@@ -109,8 +109,10 @@ export default class KmsRoomContainer extends Component {
             userName,
             // userId,
         });
-        if (this.props.location.state.create)
-            alert(`Meeting ID: ${this.props.location.state.meetingId}`);
+        if (this.props.location.state.create) {
+            navigator.clipboard.writeText(this.props.location.state.meetingId);
+            alert(`Meeting ID: ${this.props.location.state.meetingId}` + `\n` + `ID copied to clipboard, share with friend.`);
+        }
         this.handleSocketMessages();
     };
 
